@@ -39,6 +39,8 @@ struct background
 
   double H0; /**< \f$ H_0 \f$: Hubble parameter (in fact, [\f$H_0/c\f$]) in \f$ Mpc^{-1} \f$ */
 
+  double om_cmade; /* Exponential for the second CMADE approximation */
+
   double Omega0_g; /**< \f$ \Omega_{0 \gamma} \f$: photons */
 
   double T_cmb; /**< \f$ T_{cmb} \f$: current CMB temperature in Kelvins */
@@ -153,6 +155,7 @@ struct background
   int index_bg_rho_cdm;       /**< cdm density */
   int index_bg_rho_lambda;    /**< cosmological constant density */
   int index_bg_rho_fld;       /**< fluid with constant w density */
+  int index_bg_w_fld;         /**< fluid equation of state */
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
@@ -227,6 +230,7 @@ struct background
   int index_bi_a;       /**< {B} scale factor */
   int index_bi_rho_dcdm;/**< {B} dcdm density */
   int index_bi_rho_dr;  /**< {B} dr density */
+  int index_bi_rho_fld; /**< {B} fluid density */
   int index_bi_Omega_phi_scf; /**< {B} scalar field density parameter */
   int index_bi_theta_phi_scf;       /**< {B} scalar field angular variable */
   int index_bi_y_phi_scf; /**< {B} scalar field y_1 */
@@ -372,6 +376,13 @@ extern "C" {
 			   short return_format,
 			   double * pvecback
 			   );
+
+  int background_w_fld(
+                       struct background * pba,
+                       double a,
+                       double * w_fld,
+                       double * dw_over_da_fld,
+                       double * integral_fld);
 
   int background_tau_of_z(
 			  struct background *pba,

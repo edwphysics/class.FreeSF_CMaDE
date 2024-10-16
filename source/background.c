@@ -266,6 +266,8 @@ int background_functions(
   double rho_ncdm,p_ncdm,pseudo_p_ncdm;
   /* index for n_ncdm species */
   int n_ncdm;
+  /* fluid's time-dependent equation of state parameter */
+  double w_fld, dw_over_da, integral_fld;
   /* scale factor */
   double a;
   /* scalar field quantitites */
@@ -302,7 +304,25 @@ int background_functions(
 
   /* cdm */
   if (pba->has_cdm == _TRUE_) {
-    pvecback[pba->index_bg_rho_cdm] = pba->Omega0_cdm * pow(pba->H0,2) / pow(a_rel,3);
+    //pvecback[pba->index_bg_rho_cdm] = pba->Omega0_cdm * pow(pba->H0,2) / pow(a_rel,3);
+    /* CMaDE */
+    //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.3705*pba->Omega0_cdm/pow(a_rel,3) - 0.107*exp(-pow(log(a_rel),2)));
+    /* CMaDE erf approximation*/
+    /*22/02/2022*/
+    //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * ((1.43*pba->Omega0_cdm/pow(a_rel,3) - 0.108*exp(-pow(log(a_rel),2)))/(1.004698));
+    //rho_tot += pvecback[pba->index_bg_rho_cdm];
+    /* CMaDE arctan approximation*/
+    /*27/04/2023*/
+    //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * ((1.6*pba->Omega0_cdm/pow(a_rel,3) - 0.125*exp(-pow(log(a_rel),2))));
+    /* CMaDE arctan approximation*/
+    /*19/06/2023*/
+    if(a_rel < exp(-2.0) ){
+      pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.14*pba->Omega0_cdm*exp(-3.0*log(a_rel))); 
+    }
+    else{
+      pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.05*pba->Omega0_cdm*exp(-3.065*log(a_rel)) - 0.01*exp(-pow(log(a_rel),2)));
+    }
+    /*          */
     rho_tot += pvecback[pba->index_bg_rho_cdm];
     p_tot += 0.;
     rho_m += pvecback[pba->index_bg_rho_cdm];
@@ -366,18 +386,58 @@ int background_functions(
 
   /* Lambda */
   if (pba->has_lambda == _TRUE_) {
-    pvecback[pba->index_bg_rho_lambda] = pba->Omega0_lambda * pow(pba->H0,2);
+    //pvecback[pba->index_bg_rho_lambda] = pba->Omega0_lambda * pow(pba->H0,2);
+    /* CMaDE  erf approximation*/
+    /* 22/02/2022*/
+    /*if(a_rel < exp(-12.0) ){
+      pvecback[pba->index_bg_rho_lambda] = (0.1888)*pow(pba->H0,2);
+    }
+    else if(a_rel>=exp(-12.0) && a_rel<exp(-3.0)){
+      pvecback[pba->index_bg_rho_lambda] = pow(0.1833 + 1.0/pow(log(a_rel)-1.404832506,2),1.01)*pow(pba->H0,2);
+    }
+    else if(a_rel>=exp(-3.0) && a_rel<exp(-1.0)){
+      pvecback[pba->index_bg_rho_lambda] = pow(0.1833 + 1.0/pow(log(a_rel)-1.404832506,2),0.85 - 0.055*log(a_rel))*pow(pba->H0,2);
+    }
+    //else if(a_rel>=exp(-0.5)){
+    else {
+      pvecback[pba->index_bg_rho_lambda] = (0.2*sqrt(_PI_)*erf(log(a_rel)) + 0.69)*pow(pba->H0,2);
+    }
+    /* CMaDE arctan approximation*/
+    /*19/06/2023*/
+    if(a_rel < exp(-8.5) ){
+      pvecback[pba->index_bg_rho_lambda] = (0.333)*pow(pba->H0,2);
+    }
+    else if(a_rel>=exp(-8.5) && a_rel<exp(-4.2)){
+      pvecback[pba->index_bg_rho_lambda] = (0.32 + 1.0/pow(log(a_rel)-0.6,2))*pow(pba->H0,2);
+    }
+    else if(a_rel>=exp(-4.2) && a_rel<exp(-1.3)){
+      pvecback[pba->index_bg_rho_lambda] = (0.4*atan(1.35*log(a_rel)) + 0.92)*pow(pba->H0,2);
+    }
+    else {
+      pvecback[pba->index_bg_rho_lambda] = (0.35*atan(0.56*log(a_rel)) + 0.71)*pow(pba->H0,2);
+    }
     rho_tot += pvecback[pba->index_bg_rho_lambda];
-    p_tot -= pvecback[pba->index_bg_rho_lambda];
+    //p_tot -= pvecback[pba->index_bg_rho_lambda];
+    /*27/04/2023*/
+    p_tot += pvecback[pba->index_bg_rho_lambda]*(-sqrt(6.0)/(_PI_*(pvecback[pba->index_bg_H]/pba->H0))*sqrt(pvecback[pba->index_bg_rho_lambda])/a_rel-1.0);
   }
 
-  /* fluid with w=w0+wa(1-a/a0) and constant cs2 */
+  /* fluid with w(a) and constant cs2 */
   if (pba->has_fld == _TRUE_) {
-    pvecback[pba->index_bg_rho_fld] = pba->Omega0_fld * pow(pba->H0,2)
-      / pow(a_rel,3.*(1.+pba->w0_fld+pba->wa_fld))
-      * exp(3.*pba->wa_fld*(a_rel-1.));
+
+    /* get rho_fld from vector of integrated variables */
+    pvecback[pba->index_bg_rho_fld] = pvecback_B[pba->index_bi_rho_fld];
+
+    /* get w_fld from dedicated function */
+    class_call(background_w_fld(pba,a,&w_fld,&dw_over_da,&integral_fld), pba->error_message, pba->error_message);
+    pvecback[pba->index_bg_w_fld] = w_fld;
+
+    // Obsolete: at the beginning, we had here the analytic integral solution corresponding to the case w=w0+w1(1-a/a0):
+    // pvecback[pba->index_bg_rho_fld] = pba->Omega0_fld * pow(pba->H0,2) / pow(a_rel,3.*(1.+pba->w0_fld+pba->wa_fld)) * exp(3.*pba->wa_fld*(a_rel-1.));
+    // But now everthing is integrated numerically for a given w_fld(a) defined in the function background_w_fld.
+
     rho_tot += pvecback[pba->index_bg_rho_fld];
-    p_tot += (pba->w0_fld+pba->wa_fld*(1.-a_rel)) * pvecback[pba->index_bg_rho_fld];
+    p_tot += w_fld * pvecback[pba->index_bg_rho_fld];
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -443,6 +503,65 @@ int background_functions(
 }
 
 /**
+ * Single place where the fluid equation of state is
+ * defined. Parameters of the function are passed through the
+ * background structure. Generalisation to arbitrary functions should
+ * be simple.
+ *
+ * @param pba            Input: pointer to background structure
+ * @param a              Input: current value of scale factor
+ * @param w_fld          Output: equation of state parameter w_fld(a)
+ * @param dw_over_da_fld Output: function dw_fld/da
+ * @param integral_fld   Output: function \f$ \int_{a}^{a_0} da 3(1+w_{fld})/a \f$
+ * @return the error status
+ */
+
+int background_w_fld(
+                     struct background * pba,
+                     double a,
+                     double * w_fld,
+                     double * dw_over_da_fld,
+                     double * integral_fld) {
+
+  /** - first, define the function w(a) */
+  //*w_fld = pba->w0_fld + pba->wa_fld * (1. - a / pba->a_today);
+  // Effective CMaDE equation of state.
+  *w_fld = 0.098*atan(1.2*(log(a / pba->a_today) + 0.8)) - 0.86;
+
+  /** - then, give the corresponding analytic derivative dw/da (used
+        by perturbation equations; we could compute it numerically,
+        but with a loss of precision; as long as there is a simple
+        analytic expression of the derivative of the previous
+        function, let's use it! */
+  //*dw_over_da_fld = - pba->wa_fld / pba->a_today;
+  // Effective CMaDE equation of state.
+  *dw_over_da_fld = 0.1176*(pba->a_today / a)/(1.44*pow(log(a / pba->a_today)+0.8,2)+1.0);
+
+  /** - finally, give the analytic solution of the following integral:
+        \f$ \int_{a}^{a0} da 3(1+w_{fld})/a \f$. This is used in only
+        one place, in the initial conditions for the background, and
+        with a=a_ini. If your w(a) does not lead to a simple analytic
+        solution of this integral, no worry: instead of writing
+        something here, the best would then be to leave it equal to
+        zero, and then in background_initial_conditions() you should
+        implement a numerical calculation of this integral only for
+        a=a_ini, using for instance Romberg integration. It should be
+        fast, simple, and accurate enough. */
+  //*integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(pba->a_today/a) + pba->wa_fld*(a/pba->a_today-1.));
+  // Effective CMaDE equation of state.
+  *integral_fld = 0.42*log(pba->a_today / a) + 0.144583614 +
+                  0.122500098*log(log(a/pba->a_today)*(log(a/pba->a_today)+1.6) + 1.33444)
+                  -0.2352*atan(1.2*log(a/pba->a_today)+0.96)-0.294*log(a/pba->a_today)*atan(1.2*log(a/pba->a_today)+0.96);
+
+  /** note: of course you can generalise these formulas to anything,
+      defining new parameters pba->w..._fld. Just remember that so
+      far, HyRec explicitely assumes that w(a)= w0 + wa (1-a/a0); but
+      Recfast does not assume anything */
+
+  return _SUCCESS_;
+}
+
+/**
  * Initialize the background structure, and in particular the
  * background interpolation table.
  *
@@ -462,6 +581,7 @@ int background_init(
   int n_ncdm;
   double rho_ncdm_rel,rho_nu_rel;
   double Neff;
+  double w_fld, dw_over_da, integral_fld;
   int filenum=0;
 
   /** - in verbose mode, provide some information */
@@ -555,10 +675,12 @@ int background_init(
 
   /* fluid equation of state */
   if (pba->has_fld == _TRUE_) {
-    class_test(pba->w0_fld+pba->wa_fld>=1./3.,
+    class_call(background_w_fld(pba,0.,&w_fld,&dw_over_da,&integral_fld), pba->error_message, pba->error_message);
+
+    class_test(w_fld >= 1./3.,
                pba->error_message,
-               "Your choice for w0_fld+wa_fld=%g is suspicious, there would not be radiation domination at early times\n",
-               pba->w0_fld+pba->wa_fld);
+               "Your choice for w(a--->0)=%g is suspicious, since it is bigger than -1/3 there cannot be radiation domination at early times\n",
+               w_fld);
   }
 
   /* in verbose mode, inform the user about the value of the ncdm
@@ -775,6 +897,7 @@ int background_indices(
 
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
+  class_define_index(pba->index_bg_w_fld,pba->has_fld,index_bg,1);
 
   /* - index for ultra-relativistic neutrinos/species */
   class_define_index(pba->index_bg_rho_ur,pba->has_ur,index_bg,1);
@@ -839,6 +962,9 @@ int background_indices(
 
   /* -> energy density in DR */
   class_define_index(pba->index_bi_rho_dr,pba->has_dr,index_bi,1);
+
+  /* -> energy density in fluid */
+  class_define_index(pba->index_bi_rho_fld,pba->has_fld,index_bi,1);
 
   /* -> scalar field quantities */
   class_define_index(pba->index_bi_Omega_phi_scf,pba->has_scf,index_bi,1);
@@ -1685,6 +1811,13 @@ int background_solve(
       if(pba->has_lambda == _TRUE_)
 	printf("     -> Omega_Lambda = %g, wished = %g\n",
                pvecback[pba->index_bg_rho_lambda]/pvecback[pba->index_bg_rho_crit], pba->Omega0_lambda);
+        printf("Prueba para CMaDE:\n");
+        printf(" -> rho_b = %g\n", pvecback[pba->index_bg_rho_b]);
+        printf(" -> Omega_b = %g, wished %g\n",
+             pvecback[pba->index_bg_rho_b]/pvecback[pba->index_bg_rho_crit], pba->Omega0_b);
+        printf(" -> rho_cdm = %g\n", pvecback[pba->index_bg_rho_cdm]);
+        printf(" -> Omega_cdm = %g, wished %g\n",
+              pvecback[pba->index_bg_rho_cdm]/pvecback[pba->index_bg_rho_crit], pba->Omega0_cdm);
 /*      printf("     -> parameters: [lambda, alpha, A, B] = \n");
       printf("                    [");
       for (i=0; i<pba->scf_parameters_size-1; i++){
@@ -1728,7 +1861,9 @@ int background_initial_conditions(
   double rho_ncdm, p_ncdm, rho_ncdm_rel_tot=0.;
   double f,Omega_rad, rho_rad;
   int counter,is_early_enough,n_ncdm;
-  //double scf_lambda;
+  double scf_lambda;
+  double rho_fld_today;
+  double w_fld,dw_over_da_fld,integral_fld;
 
   /** - fix initial value of \f$ a \f$ */
   a = ppr->a_ini_over_a_today_default * pba->a_today;
@@ -1810,6 +1945,25 @@ int background_initial_conditions(
       /** There is also a space reserved for a future case where dr is not sourced by dcdm */
       pvecback_integration[pba->index_bi_rho_dr] = 0.0;
     }
+  }
+
+  if (pba->has_fld == _TRUE_){
+
+    /* rho_fld today */
+    rho_fld_today = pba->Omega0_fld * pow(pba->H0,2);
+
+    /* integrate rho_fld(a) from a_ini to a_0, to get rho_fld(a_ini) given rho_fld(a0) */
+    class_call(background_w_fld(pba,a,&w_fld,&dw_over_da_fld,&integral_fld), pba->error_message, pba->error_message);
+
+    /* Note: for complicated w_fld(a) functions with no simple
+    analytic integral, this is the place were you should compute
+    numerically the simple 1d integral [int_{a_ini}^{a_0} 3
+    [(1+w_fld)/a] da] (e.g. with the Romberg method?) instead of
+    calling background_w_fld */
+
+    /* rho_fld at initial time */
+    pvecback_integration[pba->index_bi_rho_fld] = rho_fld_today * exp(integral_fld);
+
   }
 
   /** - Fix initial values of scalar field quantities
@@ -1945,6 +2099,7 @@ int background_output_data(
     }
     class_store_double(dataptr,pvecback[pba->index_bg_rho_lambda],pba->has_lambda,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_fld],pba->has_fld,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_w_fld],pba->has_fld,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_ur],pba->has_ur,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_crit],_TRUE_,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_dcdm],pba->has_dcdm,storeidx);
@@ -2004,7 +2159,7 @@ int background_derivs(
 
   struct background_parameters_and_workspace * pbpaw;
   struct background * pba;
-  double * pvecback;
+  double * pvecback, a, H, rho_M;
 
   pbpaw = parameters_and_workspace;
   pba =  pbpaw->pba;
@@ -2014,6 +2169,10 @@ int background_derivs(
   class_call(background_functions(pba, y, pba->normal_info, pvecback),
              pba->error_message,
              error_message);
+
+  /** - Short hand notation */
+  a = y[pba->index_bi_a];
+  H = pvecback[pba->index_bg_H];
 
   /** - calculate \f$ a'=a^2 H \f$ */
   dy[pba->index_bi_a] = y[pba->index_bi_a] * y[pba->index_bi_a] * pvecback[pba->index_bg_H];
@@ -2043,12 +2202,19 @@ int background_derivs(
       y[pba->index_bi_a]*pba->Gamma_dcdm*y[pba->index_bi_rho_dcdm];
   }
 
+  if (pba->has_fld == _TRUE_) {
+    /** - Compute fld density \f$ \rho' = -3aH (1+w_{fld}(a)) \rho \f$ */
+    dy[pba->index_bi_rho_fld] = -3.*y[pba->index_bi_a]*pvecback[pba->index_bg_H]*(1.+pvecback[pba->index_bg_w_fld])*y[pba->index_bi_rho_fld];
+  }
+
   if (pba->has_scf == _TRUE_){
     dy[pba->index_bi_Omega_phi_scf] = 3.*y[pba->index_bi_a]*pvecback[pba->index_bg_H]*
-      (pvecback[pba->index_bg_w_tot]+cos_scf(pba,y[pba->index_bi_theta_phi_scf]));
+      (pvecback[pba->index_bg_w_tot]+cos_scf(pba,y[pba->index_bi_theta_phi_scf])
+        /*-(2./_PI_)*sqrt(3./2.)*pow(pvecback[pba->index_bg_rho_lambda]/pvecback[pba->index_bg_rho_crit],3./2.)/(y[pba->index_bi_a]*y[pba->index_bi_Omega_phi_scf])*/);
       
     dy[pba->index_bi_theta_phi_scf] = y[pba->index_bi_a]*pvecback[pba->index_bg_H]*
-      (-3.*sin_scf(pba,y[pba->index_bi_theta_phi_scf])+y[pba->index_bi_y_phi_scf]);
+      (-3.*sin_scf(pba,y[pba->index_bi_theta_phi_scf])+y[pba->index_bi_y_phi_scf]
+        /*-(2./_PI_)*sqrt(3./2.)*pow(pvecback[pba->index_bg_rho_lambda]/pvecback[pba->index_bg_rho_crit],3./2.)/(y[pba->index_bi_a]*y[pba->index_bi_Omega_phi_scf]*tan(y[pba->index_bi_theta_phi_scf]/2.))*/);
       
     dy[pba->index_bi_y_phi_scf] = y[pba->index_bi_a]*pvecback[pba->index_bg_H]*
       (1.5*(1.+pvecback[pba->index_bg_w_tot])*y[pba->index_bi_y_phi_scf]);

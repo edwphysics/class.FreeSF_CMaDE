@@ -549,6 +549,7 @@ int input_read_parameters(
 
   double z_max=0.;
   int bin;
+  int input_verbose=0;
 
   sigma_B = 2. * pow(_PI_,5) * pow(_k_B_,4) / 15. / pow(_h_P_,3) / pow(_c_,2);
 
@@ -573,6 +574,8 @@ int input_read_parameters(
   /** - if entries passed in file_content structure, carefully read
       and interpret each of them, and tune the relevant input
       parameters accordingly*/
+
+  class_read_int("input_verbose",input_verbose);
 
   /** Knowing the gauge from the very beginning is useful (even if
       this could be a run not requiring perturbations at all: even in
@@ -617,6 +620,12 @@ int input_read_parameters(
     pba->H0 = param2 *  1.e5 / _c_;
     pba->h = param2;
   }
+
+  //CMADE approximation 2 17-06-21
+  class_call(parser_read_double(pfc,"om_cmade",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  pba->om_cmade = param1;
 
   /** - Omega_0_g (photons) and T_cmb */
   class_call(parser_read_double(pfc,"T_cmb",&param1,&flag1,errmsg),
@@ -945,6 +954,7 @@ int input_read_parameters(
              errmsg,
              errmsg);
 
+  /* CLASS COMMENTED FOR THE CMADE CASE
   class_test((flag1 == _TRUE_) && (flag2 == _TRUE_) && ((flag3 == _FALSE_) || (param3 >= 0.)),
              errmsg,
              "In input file, either Omega_Lambda or Omega_fld must be left unspecified, except if Omega_scf is set and <0.0, in which case the contribution from the scalar field will be the free parameter.");
@@ -969,18 +979,39 @@ int input_read_parameters(
     Omega_tot += pba->Omega0_fld;
   }
   if ((flag3 == _TRUE_) && (param3 >= 0.)){
-      pba->Omega0_scf = param3;
-      Omega_tot += pba->Omega0_scf;
+    pba->Omega0_scf = param3;
+    Omega_tot += pba->Omega0_scf;
   }
-  
-    /* Step 2 */
-    if (flag1 == _FALSE_) //Fill with Lambda
-        pba->Omega0_lambda= 1. - pba->Omega0_k - Omega_tot;
-    else if (flag2 == _FALSE_)  // Fill up with fluid
-        pba->Omega0_fld = 1. - pba->Omega0_k - Omega_tot;
-    else if ((flag3 == _TRUE_) && (param3 < 0.)){ // Fill up with scalar field
-        pba->Omega0_scf = 1. - pba->Omega0_k - Omega_tot;
-    }
+  /* Step 2 */
+  if (flag1 == _FALSE_) {
+    //Fill with Lambda
+    pba->Omega0_lambda= 1. - pba->Omega0_k - Omega_tot;
+    if (input_verbose > 2) printf(" -> matched budget equations by adjusting Omega_Lambda = %e\n",pba->Omega0_lambda);
+  }
+  else if (flag2 == _FALSE_) {
+    // Fill up with fluid
+    pba->Omega0_fld = 1. - pba->Omega0_k - Omega_tot;
+    if (input_verbose > 2) printf(" -> matched budget equations by adjusting Omega_fld = %e\n",pba->Omega0_fld);
+  }
+  else if ((flag3 == _TRUE_) && (param3 < 0.)){
+    // Fill up with scalar field
+    pba->Omega0_scf = 1. - pba->Omega0_k - Omega_tot;
+    if (input_verbose > 2) printf(" -> matched budget equations by adjusting Omega_scf = %e\n",pba->Omega0_scf);
+  }
+  else if ((flag1 == _TRUE_) && (flag2 == _TRUE_) && (flag3 == _TRUE_)){
+    //Fill with CMADE
+    //case 1
+    //Now cold dark matter is used to fill Friedmann equation.
+    Omega_tot -= pba->Omega0_cdm;
+    pba->Omega0_cdm = 0.0;
+    pba->Omega0_cdm = 1. - pba->Omega0_k - Omega_tot;
+    //case 2
+    //Now baryons are used to fill Friedmann equation.
+    //Omega_tot -= pba->Omega0_b;
+    //pba->Omega0_b = 0.0;
+    //pba->Omega0_b = 1. - pba->Omega0_k - Omega_tot;
+
+  }
 
   /** - Test that the user have not specified Omega_scf = -1 but left either
       Omega_lambda or Omega_fld unspecified:*/
@@ -2812,6 +2843,7 @@ int input_default_params(
 
   pba->h = 0.67556;
   pba->H0 = pba->h * 1.e5 / _c_;
+  pba->om_cmade = 1.0;
   pba->T_cmb = 2.7255;
   pba->Omega0_g = (4.*sigma_B/_c_*pow(pba->T_cmb,4.)) / (3.*_c_*_c_*1.e10*pba->h*pba->h/_Mpc_over_m_/_Mpc_over_m_/8./_PI_/_G_);
   pba->Omega0_ur = 3.046*7./8.*pow(4./11.,4./3.)*pba->Omega0_g;
