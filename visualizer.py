@@ -14,10 +14,10 @@ m  = 1.e-22 	  # SF Mass in eV
 T0 = 2.725e6  	  # CMB Temperature in microkelvins
 
 # Load the data
-data 	= np.loadtxt('output/lsfdm01_background.dat')
-data_k0 = np.loadtxt('output/lsfdm01_perturbations_k0_s.dat')
-data_cl = np.loadtxt('output/lsfdm01_cl.dat')
-data_pk = np.loadtxt('output/lsfdm01_pk.dat')
+data 	= np.loadtxt('output/lsfdm00_background.dat')
+data_k0 = np.loadtxt('output/lsfdm00_perturbations_k0_s.dat')
+data_cl = np.loadtxt('output/lsfdm00_cl.dat')
+data_pk = np.loadtxt('output/lsfdm00_pk.dat')
 
 # Extract Relevant Results
 z 		= np.array(data[:,0])

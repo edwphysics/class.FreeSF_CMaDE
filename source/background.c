@@ -304,25 +304,49 @@ int background_functions(
 
   /* cdm */
   if (pba->has_cdm == _TRUE_) {
-    //pvecback[pba->index_bg_rho_cdm] = pba->Omega0_cdm * pow(pba->H0,2) / pow(a_rel,3);
+    pvecback[pba->index_bg_rho_cdm] = pba->Omega0_cdm * pow(pba->H0,2) / pow(a_rel,3);
+
     /* CMaDE */
     //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.3705*pba->Omega0_cdm/pow(a_rel,3) - 0.107*exp(-pow(log(a_rel),2)));
+
     /* CMaDE erf approximation*/
     /*22/02/2022*/
     //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * ((1.43*pba->Omega0_cdm/pow(a_rel,3) - 0.108*exp(-pow(log(a_rel),2)))/(1.004698));
-    //rho_tot += pvecback[pba->index_bg_rho_cdm];
+
     /* CMaDE arctan approximation*/
     /*27/04/2023*/
     //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * ((1.6*pba->Omega0_cdm/pow(a_rel,3) - 0.125*exp(-pow(log(a_rel),2))));
+
     /* CMaDE arctan approximation*/
     /*19/06/2023*/
-    if(a_rel < exp(-2.0) ){
+    /*if(a_rel < exp(-2.0) ){
       pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.14*pba->Omega0_cdm*exp(-3.0*log(a_rel))); 
     }
     else{
       pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (1.05*pba->Omega0_cdm*exp(-3.065*log(a_rel)) - 0.01*exp(-pow(log(a_rel),2)));
     }
-    /*          */
+
+    /* CMaDE+CDM Approximation */
+    //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (0.230673 * exp(0.0000531434 * pow(log(a_rel), 2))) / pow(a_rel, 2.99792);
+
+    /* CMaDE+SFDM Approximation */
+    /* Uncomment the approx. in the SFDM contribution to rho_tot: ~L.500 */
+    /*if (log(a_rel) < -log(1000000)) {
+      pvecback[pba->index_bg_rho_scf] = pow(pba->H0,2) * 0.22492460990817714 * exp(-2.99324 * log(a_rel));
+    } else if (log(a_rel) >= -log(1000000)) {
+      pvecback[pba->index_bg_rho_scf] = pow(pba->H0,2) * exp(-1.3300501126160234 
+                                        - 2.656981613134272 * log(a_rel) 
+                                        + 0.36822672438979226 * pow(log(a_rel), 2) 
+                                        + 0.2073971024254741 * pow(log(a_rel), 3) 
+                                        + 0.0636703304118018 * pow(log(a_rel), 4) 
+                                        + 0.011479176793367645 * pow(log(a_rel), 5) 
+                                        + 0.0012541559871400312 * pow(log(a_rel), 6) 
+                                        + 0.0000817188628252522 * pow(log(a_rel), 7) 
+                                        + 2.9207740023346377e-6 * pow(log(a_rel), 8) 
+                                        + 4.404638050857836e-8 * pow(log(a_rel), 9));
+    }
+
+    /**/
     rho_tot += pvecback[pba->index_bg_rho_cdm];
     p_tot += 0.;
     rho_m += pvecback[pba->index_bg_rho_cdm];
@@ -387,6 +411,7 @@ int background_functions(
   /* Lambda */
   if (pba->has_lambda == _TRUE_) {
     //pvecback[pba->index_bg_rho_lambda] = pba->Omega0_lambda * pow(pba->H0,2);
+
     /* CMaDE  erf approximation*/
     /* 22/02/2022*/
     /*if(a_rel < exp(-12.0) ){
@@ -402,9 +427,10 @@ int background_functions(
     else {
       pvecback[pba->index_bg_rho_lambda] = (0.2*sqrt(_PI_)*erf(log(a_rel)) + 0.69)*pow(pba->H0,2);
     }
+
     /* CMaDE arctan approximation*/
     /*19/06/2023*/
-    if(a_rel < exp(-8.5) ){
+    /*if(a_rel < exp(-8.5) ){
       pvecback[pba->index_bg_rho_lambda] = (0.333)*pow(pba->H0,2);
     }
     else if(a_rel>=exp(-8.5) && a_rel<exp(-4.2)){
@@ -416,6 +442,36 @@ int background_functions(
     else {
       pvecback[pba->index_bg_rho_lambda] = (0.35*atan(0.56*log(a_rel)) + 0.71)*pow(pba->H0,2);
     }
+
+    /* CMaDE+CDM Aproximation */
+    /*if (log(a_rel) < -16.23619130191664) {
+      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * 2.7234082953785874;
+    } else if (log(a_rel) >= -16.23619130191664) {
+      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * (0.7156889715567156 
+                                           - 0.18055667816306442 * log(a_rel) 
+                                           + 0.1549880756478393 * pow(log(a_rel), 2) 
+                                           + 0.04455332578694361 * pow(log(a_rel), 3) 
+                                           + 0.005343619631863289 * pow(log(a_rel), 4) 
+                                           + 0.0003380992404158848 * pow(log(a_rel), 5) 
+                                           + 0.000011134571381725548 * pow(log(a_rel), 6) 
+                                           + 1.5106820106746927e-7 * pow(log(a_rel), 7));
+    }
+
+    /* CMaDE+SFDM Approximation */
+    if (log(a_rel) < -log(1000000)) {
+      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * 2.758671282225375;
+    } else if (log(a_rel) >= -log(1000000)) {
+      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * (0.713205673379327 
+                                           - 0.19515398344241114 * log(a_rel) 
+                                           + 0.13535492415459507 * pow(log(a_rel), 2) 
+                                           + 0.03581406344210141 * pow(log(a_rel), 3) 
+                                           + 0.003657750016199757 * pow(log(a_rel), 4) 
+                                           + 0.0001745622310330261 * pow(log(a_rel), 5) 
+                                           + 3.2445042349552926e-6 * pow(log(a_rel), 6));
+    }
+
+
+    /**/
     rho_tot += pvecback[pba->index_bg_rho_lambda];
     //p_tot -= pvecback[pba->index_bg_rho_lambda];
     /*27/04/2023*/
@@ -457,7 +513,30 @@ int background_functions(
     pvecback[pba->index_bg_Omega_phi_scf] = Omega_phi; // value of the scalar field Omega_phi
     pvecback[pba->index_bg_theta_phi_scf] = theta_phi; // value of the scalar field theta_phi
     pvecback[pba->index_bg_y_phi_scf] = y1_phi; // value of the scalar field y1_phi
-    pvecback[pba->index_bg_rho_scf] = exp(Omega_phi)*rho_tot/(1.-exp(Omega_phi)); // energy of the scalar field
+    //pvecback[pba->index_bg_rho_scf] = exp(Omega_phi)*rho_tot/(1.-exp(Omega_phi)); // energy of the scalar field
+
+    /* CMaDE+SFDM Approximation */
+    /* Comment the above definition of rho_scf */
+    if (log(a_rel) < -log(1000000)) {
+      //pvecback[pba->index_bg_rho_scf] = pow(pba->H0,2) * 0.22492460990817714 * exp(-2.99324 * log(a_rel));
+      pvecback[pba->index_bg_rho_scf] = exp(Omega_phi)*rho_tot/(1.-exp(Omega_phi)); // energy of the scalar field
+    } else if (log(a_rel) >= -log(1000000) && log(a_rel) < -log(1.00001)) {
+      pvecback[pba->index_bg_rho_scf] = pow(pba->H0,2) * exp(-1.3300501126160234 
+                                        - 2.656981613134272 * log(a_rel) 
+                                        + 0.36822672438979226 * pow(log(a_rel), 2) 
+                                        + 0.2073971024254741 * pow(log(a_rel), 3) 
+                                        + 0.0636703304118018 * pow(log(a_rel), 4) 
+                                        + 0.011479176793367645 * pow(log(a_rel), 5) 
+                                        + 0.0012541559871400312 * pow(log(a_rel), 6) 
+                                        + 0.0000817188628252522 * pow(log(a_rel), 7) 
+                                        + 2.9207740023346377e-6 * pow(log(a_rel), 8) 
+                                        + 4.404638050857836e-8 * pow(log(a_rel), 9));
+    } else {
+      pvecback[pba->index_bg_rho_scf] = exp(Omega_phi)*rho_tot/(1.-exp(Omega_phi));
+    }
+
+    /**/
+
     pvecback[pba->index_bg_p_scf] = -cos_scf(pba,theta_phi)*pvecback[pba->index_bg_rho_scf];// pressure of the scalar field
     rho_m += pvecback[pba->index_bg_rho_scf]; // add scalar field energy density into the total matter budget
     rho_tot += pvecback[pba->index_bg_rho_scf]; // add scalar field density to the total one
@@ -525,8 +604,49 @@ int background_w_fld(
 
   /** - first, define the function w(a) */
   //*w_fld = pba->w0_fld + pba->wa_fld * (1. - a / pba->a_today);
+
   // Effective CMaDE equation of state.
-  *w_fld = 0.098*atan(1.2*(log(a / pba->a_today) + 0.8)) - 0.86;
+  /**w_fld = 0.098*atan(1.2*(log(a / pba->a_today) + 0.8)) - 0.86;
+
+  /* CMaDE+CDM Approximation Gaussian+Exponential */
+  /**w_fld = -1.00007 
+           + 0.985753 * exp(-pow((log(a / pba->a_today) - 9.232), 2) / (2 * pow(5.31195, 2))) 
+           - 0.127456 * exp(1.40045 * log(a / pba->a_today));
+
+  /* CMaDE+CDM Approximation Polynomic */
+  /**w_fld = -0.90507 
+           - 0.0777024 * log(a / pba->a_today) 
+           - 0.069433 * pow(log(a / pba->a_today), 2) 
+           - 0.0221413 * pow(log(a / pba->a_today), 3) 
+           - 0.00396326 * pow(log(a / pba->a_today), 4) 
+           - 0.000447934 * pow(log(a / pba->a_today), 5) 
+           - 0.0000334461 * pow(log(a / pba->a_today), 6) 
+           - 1.67201e-6 * pow(log(a / pba->a_today), 7) 
+           - 5.53437e-8 * pow(log(a / pba->a_today), 8) 
+           - 1.1633e-9 * pow(log(a / pba->a_today), 9) 
+           - 1.40553e-11 * pow(log(a / pba->a_today), 10) 
+           - 7.4304e-14 * pow(log(a / pba->a_today), 11);
+
+  /* CMaDE+SFDM Approximation Gaussian+Exponential */
+  /**w_fld = -1.00049 + 0.549487 * exp(-0.0197556 * pow(-7.21123 + log(a / pba->a_today), 2)) 
+           - 0.106232 * exp(1.55224 * log(a / pba->a_today));
+
+  /* CMaDE+SFDM Approximation Polynomic */
+  *w_fld = -0.906973 
+           - 0.0865428 * log(a / pba->a_today) 
+           - 0.0813928 * pow(log(a / pba->a_today), 2) 
+           - 0.0290209 * pow(log(a / pba->a_today), 3) 
+           - 0.00601702 * pow(log(a / pba->a_today), 4) 
+           - 0.000809124 * pow(log(a / pba->a_today), 5) 
+           - 0.0000737 * pow(log(a / pba->a_today), 6) 
+           - 4.62721e-6 * pow(log(a / pba->a_today), 7) 
+           - 2.00236e-7 * pow(log(a / pba->a_today), 8) 
+           - 5.86149e-9 * pow(log(a / pba->a_today), 9) 
+           - 1.10781e-10 * pow(log(a / pba->a_today), 10) 
+           - 1.21953e-12 * pow(log(a / pba->a_today), 11) 
+           - 5.93795e-15 * pow(log(a / pba->a_today), 12);
+
+  /**/
 
   /** - then, give the corresponding analytic derivative dw/da (used
         by perturbation equations; we could compute it numerically,
@@ -534,8 +654,47 @@ int background_w_fld(
         analytic expression of the derivative of the previous
         function, let's use it! */
   //*dw_over_da_fld = - pba->wa_fld / pba->a_today;
+
   // Effective CMaDE equation of state.
-  *dw_over_da_fld = 0.1176*(pba->a_today / a)/(1.44*pow(log(a / pba->a_today)+0.8,2)+1.0);
+  /**dw_over_da_fld = 0.1176*(pba->a_today / a)/(1.44*pow(log(a / pba->a_today)+0.8,2)+1.0);
+
+  /* CMaDE+CDM Approximation Gaussian+Exponential */
+  /**dw_over_da_fld = -0.178496 * exp(1.40045 * log(a / pba->a_today)) 
+                    - 0.0349349 * exp(-0.0177199 * pow((-9.232 + log(a / pba->a_today)), 2)) * (-9.232 + log(a / pba->a_today));
+
+  /* CMaDE+CDM Approximation Polynomic */
+  /**dw_over_da_fld = exp(-log(a / pba->a_today)) * 
+                    (-0.0777024 
+                    - 0.138866 * log(a / pba->a_today) 
+                    - 0.0664239 * pow(log(a / pba->a_today), 2) 
+                    - 0.015853 * pow(log(a / pba->a_today), 3) 
+                    - 0.00223967 * pow(log(a / pba->a_today), 4) 
+                    - 0.000200676 * pow(log(a / pba->a_today), 5) 
+                    - 0.0000117041 * pow(log(a / pba->a_today), 6) 
+                    - 4.4275e-7 * pow(log(a / pba->a_today), 7) 
+                    - 1.04697e-8 * pow(log(a / pba->a_today), 8) 
+                    - 1.40553e-10 * pow(log(a / pba->a_today), 9) 
+                    - 8.17344e-13 * pow(log(a / pba->a_today), 10));
+
+  /* CMaDE+SFDM Approximation Gaussian+Exponential */
+  /*dw_over_da_fld = -0.164898 * exp(1.55224 * log(a / pba->a_today)) - 0.0217109 * exp(-0.0197556 * pow(-7.21123 + log(a / pba->a_today), 2)) 
+           * (-7.21123 + log(a / pba->a_today));
+
+  /* CMaDE+SFDM Approximation Polynomic */
+  *dw_over_da_fld = -0.0865428 
+                    - 0.162786 * log(a / pba->a_today) 
+                    - 0.0870627 * pow(log(a / pba->a_today), 2) 
+                    - 0.0240681 * pow(log(a / pba->a_today), 3) 
+                    - 0.00404562 * pow(log(a / pba->a_today), 4) 
+                    - 0.0004422 * pow(log(a / pba->a_today), 5) 
+                    - 0.0000323904 * pow(log(a / pba->a_today), 6) 
+                    - 1.60189e-6 * pow(log(a / pba->a_today), 7) 
+                    - 5.27534e-8 * pow(log(a / pba->a_today), 8) 
+                    - 1.10781e-9 * pow(log(a / pba->a_today), 9) 
+                    - 1.34148e-11 * pow(log(a / pba->a_today), 10) 
+                    - 7.12553e-14 * pow(log(a / pba->a_today), 11);
+
+  /**/
 
   /** - finally, give the analytic solution of the following integral:
         \f$ \int_{a}^{a0} da 3(1+w_{fld})/a \f$. This is used in only
@@ -548,10 +707,52 @@ int background_w_fld(
         a=a_ini, using for instance Romberg integration. It should be
         fast, simple, and accurate enough. */
   //*integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(pba->a_today/a) + pba->wa_fld*(a/pba->a_today-1.));
+
   // Effective CMaDE equation of state.
-  *integral_fld = 0.42*log(pba->a_today / a) + 0.144583614 +
+  /**integral_fld = 0.42*log(pba->a_today / a) + 0.144583614 +
                   0.122500098*log(log(a/pba->a_today)*(log(a/pba->a_today)+1.6) + 1.33444)
                   -0.2352*atan(1.2*log(a/pba->a_today)+0.96)-0.294*log(a/pba->a_today)*atan(1.2*log(a/pba->a_today)+0.96);
+
+  /* CMaDE+CDM Approximation Gaussian+Exponential */             
+  /**integral_fld = -18.3424 + 0.27303 * exp(1.40045 * log(a / pba->a_today)) + 0.000218798 * log(a / pba->a_today) 
+                  + 19.6881 * erf(1.22893 - 0.133116 * log(a / pba->a_today));
+
+  /* CMaDE+CDM Approximation Polynomic */
+  /**integral_fld = -0.28479 * log(a / pba->a_today) 
+                  + 0.116554 * pow(log(a / pba->a_today), 2) 
+                  + 0.069433 * pow(log(a / pba->a_today), 3) 
+                  + 0.016606 * pow(log(a / pba->a_today), 4) 
+                  + 0.00237796 * pow(log(a / pba->a_today), 5) 
+                  + 0.000223967 * pow(log(a / pba->a_today), 6) 
+                  + 0.000014334 * pow(log(a / pba->a_today), 7) 
+                  + 6.27004e-7 * pow(log(a / pba->a_today), 8) 
+                  + 1.84479e-8 * pow(log(a / pba->a_today), 9) 
+                  + 3.4899e-10 * pow(log(a / pba->a_today), 10) 
+                  + 3.83325e-12 * pow(log(a / pba->a_today), 11) 
+                  + 1.8576e-14 * pow(log(a / pba->a_today), 12);                 
+
+  /* CMaDE+SFDM Approximation Gaussian+Exponential */
+  /**integral_fld = -9.02202 
+                  + 0.205313 * exp(1.55224 * log(a / pba->a_today)) 
+                  + 0.00146545 * log(a / pba->a_today)
+                  + 10.3939 * erf(1.01357 - 0.140555 * log(a / pba->a_today));
+
+  /* CMaDE+SFDM Approximation Polynomic */
+  *integral_fld = -0.279081 * log(a / pba->a_today) 
+                  + 0.129814 * pow(log(a / pba->a_today), 2) 
+                  + 0.0813928 * pow(log(a / pba->a_today), 3) 
+                  + 0.0217657 * pow(log(a / pba->a_today), 4) 
+                  + 0.00361021 * pow(log(a / pba->a_today), 5) 
+                  + 0.000404562 * pow(log(a / pba->a_today), 6) 
+                  + 0.0000315857 * pow(log(a / pba->a_today), 7) 
+                  + 1.7352e-6 * pow(log(a / pba->a_today), 8) 
+                  + 6.67455e-8 * pow(log(a / pba->a_today), 9) 
+                  + 1.75845e-9 * pow(log(a / pba->a_today), 10) 
+                  + 3.0213e-11 * pow(log(a / pba->a_today), 11) 
+                  + 3.04882e-13 * pow(log(a / pba->a_today), 12) 
+                  + 1.3703e-15 * pow(log(a / pba->a_today), 13);
+
+  /**/
 
   /** note: of course you can generalise these formulas to anything,
       defining new parameters pba->w..._fld. Just remember that so
