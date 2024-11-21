@@ -328,6 +328,27 @@ int background_functions(
 
     /* CMaDE+CDM Approximation */
     //pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * (0.230673 * exp(0.0000531434 * pow(log(a_rel), 2))) / pow(a_rel, 2.99792);
+    /*if (log(a_rel) < -16.11819130191664){ 
+    pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * exp(-1.4837694089794202 - 3.0000000777012863 * log(a_rel));
+    } else {
+    pvecback[pba->index_bg_rho_cdm] = pow(pba->H0,2) * exp(-1.3329619752019148 - 2.6760310419095763 * log(a_rel) 
+                                      + 0.2864801055288455 * pow(log(a_rel), 2) 
+                                      + 0.11307105712591078 * pow(log(a_rel), 3) 
+                                      - 0.00568072280587934 * pow(log(a_rel), 4) 
+                                      - 0.030268773191579296 * pow(log(a_rel), 5) 
+                                      - 0.01749537444244273 * pow(log(a_rel), 6) 
+                                      - 0.005901551070730593 * pow(log(a_rel), 7) 
+                                      - 0.0013685478216734566 * pow(log(a_rel), 8) 
+                                      - 0.00023079110846888727 * pow(log(a_rel), 9) 
+                                      - 0.00002898999636593357 * pow(log(a_rel), 10) 
+                                      - 2.7344779710995218e-6 * pow(log(a_rel), 11) 
+                                      - 1.9305394896654601e-7 * pow(log(a_rel), 12) 
+                                      - 1.005224281150809e-8 * pow(log(a_rel), 13) 
+                                      - 3.746373677659375e-10 * pow(log(a_rel), 14) 
+                                      - 9.453889143638086e-12 * pow(log(a_rel), 15) 
+                                      - 1.4468767249234546e-13 * pow(log(a_rel), 16) 
+                                      - 1.0139102774476728e-15 * pow(log(a_rel), 17));
+    } 
 
     /* CMaDE+SFDM Approximation */
     /* Uncomment the approx. in the SFDM contribution to rho_tot: ~L.500 */
@@ -444,17 +465,25 @@ int background_functions(
     }
 
     /* CMaDE+CDM Aproximation */
-    /*if (log(a_rel) < -16.23619130191664) {
-      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * 2.7234082953785874;
-    } else if (log(a_rel) >= -16.23619130191664) {
-      pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * (0.7156889715567156 
-                                           - 0.18055667816306442 * log(a_rel) 
-                                           + 0.1549880756478393 * pow(log(a_rel), 2) 
-                                           + 0.04455332578694361 * pow(log(a_rel), 3) 
-                                           + 0.005343619631863289 * pow(log(a_rel), 4) 
-                                           + 0.0003380992404158848 * pow(log(a_rel), 5) 
-                                           + 0.000011134571381725548 * pow(log(a_rel), 6) 
-                                           + 1.5106820106746927e-7 * pow(log(a_rel), 7));
+    /*if (log(a_rel) < -16.11919130191664) {
+        pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * 2.723408232124775;
+    } else if (log(a_rel) >= -16.11919130191664) {
+        pvecback[pba->index_bg_rho_lambda] = pow(pba->H0,2) * (0.7142614326376838
+                                           - 0.20246801383621782 * log(a_rel)
+                                           + 0.08781970652388955 * pow(log(a_rel), 2)
+                                           - 0.043749106741739305 * pow(log(a_rel), 3)
+                                           - 0.060065958858649536 * pow(log(a_rel), 4)
+                                           - 0.03066569598768081 * pow(log(a_rel), 5)
+                                           - 0.010030158099522478 * pow(log(a_rel), 6)
+                                           - 0.0023032606892533164 * pow(log(a_rel), 7)
+                                           - 0.00038171763907569113 * pow(log(a_rel), 8)
+                                           - 0.00004610599379813637 * pow(log(a_rel), 9)
+                                           - 4.055972753314771e-6 * pow(log(a_rel), 10)
+                                           - 2.568541161896393e-7 * pow(log(a_rel), 11)
+                                           - 1.1398309589982902e-8 * pow(log(a_rel), 12)
+                                           - 3.3625004124375164e-10 * pow(log(a_rel), 13)
+                                           - 5.92104507461721e-12 * pow(log(a_rel), 14)
+                                           - 4.708733306330625e-14 * pow(log(a_rel), 15));
     }
 
     /* CMaDE+SFDM Approximation */
